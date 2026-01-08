@@ -14,14 +14,20 @@ class CategoryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
+        $data = [
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
-            'posts' => PostResource::collection($this->whenLoaded('posts')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
+
+        // Solo incluir posts si fueron explícitamente cargados (evita N+1 queries)
+        if ($this->relationLoaded('posts')) {
+            $data['posts'] = PostResource::collection($this->posts);
+        }
+
+        return $data;
     }
 }

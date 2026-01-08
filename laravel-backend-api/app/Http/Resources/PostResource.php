@@ -14,7 +14,7 @@ class PostResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
+        $data = [
             'id' => $this->id,
             'title' => $this->title,
             'slug' => $this->slug,
@@ -22,10 +22,20 @@ class PostResource extends JsonResource
             'body' => $this->body,
             'is_published' => $this->is_published,
             'image' => $this->image,
-            'category' => new CategoryResource($this->whenLoaded('category')),
-            'author' => new UserResource($this->whenLoaded('user')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
+
+        // Solo incluir category si fue explícitamente cargado (evita N+1 queries)
+        if ($this->relationLoaded('category')) {
+            $data['category'] = new CategoryResource($this->category);
+        }
+
+        // Solo incluir author si fue explícitamente cargado (evita N+1 queries)
+        if ($this->relationLoaded('user')) {
+            $data['author'] = new UserResource($this->user);
+        }
+
+        return $data;
     }
 }

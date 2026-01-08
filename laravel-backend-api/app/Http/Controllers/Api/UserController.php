@@ -6,15 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    // Listar todos los usuarios
+    // Listar todos los usuarios (con paginación)
     public function index()
     {
-        $users = User::all();
+        $users = User::paginate(15);
         return UserResource::collection($users);
     }
 
@@ -28,38 +27,59 @@ class UserController extends Controller
     // Crear un nuevo usuario
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:6',
-        ]);
+        try {
+            // Validar los datos del request
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users,email',
+                'password' => 'required|string|min:6',
+            ]);
 
-        // Hashear la contraseña
-        $data['password'] = Hash::make($data['password']);
+            // Nota: Password se hashea automáticamente via User model cast
 
-        $user = User::create($data);
+            // Crear el nuevo usuario
+            $user = User::create($data);
 
-        return new UserResource($user);
+            // Devolvemos el recurso creado con una respuesta JSON
+            return response()->json(new UserResource($user), 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Si la validación falla, devolvemos un JSON con los errores
+            return response()->json([
+                'message' => 'Datos de validación inválidos',
+                'errors' => $e->errors(), // Los errores de validación
+            ], 422);
+        }
     }
+
 
     // Actualizar un usuario existente
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        try {
+            // Buscar al usuario o devolver un error 404 si no se encuentra
+            $user = User::findOrFail($id);
 
-        $data = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => ['sometimes','required','string','email','max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => 'sometimes|required|string|min:6',
-        ]);
+            // Validar los datos del request
+            $data = $request->validate([
+                'name' => 'sometimes|required|string|max:255',
+                'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+                'password' => 'sometimes|required|string|min:6',
+            ]);
 
-        if(isset($data['password'])){
-            $data['password'] = Hash::make($data['password']);
+            // Nota: Password se hashea automáticamente via User model cast si está presente
+
+            // Actualizar el usuario con los datos validados
+            $user->update($data);
+
+            // Devolver el recurso actualizado
+            return new UserResource($user);        
+        } catch (\Exception $e) {
+            // Capturar cualquier otro error inesperado
+            return response()->json([
+                'message' => 'Error al procesar la solicitud',
+                'error' => $e->errors(),
+            ], 422);
         }
-
-        $user->update($data);
-
-        return new UserResource($user);
     }
 
     // Eliminar un usuario
