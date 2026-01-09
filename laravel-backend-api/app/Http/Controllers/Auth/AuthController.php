@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    /**
+     * Login usando tokens Bearer
+     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -21,25 +24,39 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = $request->user();
+        $user = Auth::user();
 
-        // Crear token
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'user' => $user,
             'token' => $token,
-            'token_type' => 'Bearer'
+            'token_type' => 'Bearer',
         ]);
     }
 
+    /**
+     * Logout: eliminar todos los tokens del usuario
+     */
     public function logout(Request $request)
     {
-        // Eliminar el token actual
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        if ($user) {
+            $user->tokens()->delete();
+        }
 
         return response()->json([
-            'message' => 'Sesión cerrada correctamente'
+            'message' => 'Logout correcto'
+        ]);
+    }
+
+    /**
+     * Obtener usuario autenticado
+     */
+    public function me(Request $request)
+    {
+        return response()->json([
+            'user' => $request->user(),
         ]);
     }
 }
