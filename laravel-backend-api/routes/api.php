@@ -2,23 +2,12 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\PostController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\AuthController;
 
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'me']);
-});
-
-// Rutas para Categories (categorías)
-Route::apiResource('categories', CategoryController::class);
-
-// Rutas para Posts (posts del blog)
-Route::apiResource('posts', PostController::class);
-
-// Rutas para Users (usuarios)
-Route::apiResource('users', UserController::class);
+Route::post('/profile', [AuthController::class, 'profile'])->middleware('auth:sanctum');
