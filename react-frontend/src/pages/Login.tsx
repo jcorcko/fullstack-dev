@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { register } from "../services/authService";
+import { login } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
@@ -12,7 +12,7 @@ export default function Login() {
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         setErrors([]);
-        register({ email: email, password: password }).then(res => {
+        login({ email: email, password: password }).then(res => {
             if (res.data.errors) {
                 setErrors(res.data.errors);
             } else {
