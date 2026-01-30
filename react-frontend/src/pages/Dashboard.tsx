@@ -1,14 +1,9 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import LogoutButton from "../components/LogoutButton";
 
 export default function Dashboard() {
 
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const navigate = useNavigate();
-    const logout = () => {
-        localStorage.removeItem("user");
-        localStorage.removeItem("isAuthenticated");
-        navigate("/login");        
-    }
 
     return (
         <>
@@ -30,9 +25,7 @@ export default function Dashboard() {
                     </nav>
 
                     <div className="p-4 border-t border-gray-700">
-                        <button onClick={logout} className="w-full bg-red-600 py-2 rounded hover:bg-red-700 transition">
-                            Logout
-                        </button>
+                        <LogoutButton />
                     </div>
                 </aside>
 
